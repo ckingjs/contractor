@@ -11,3 +11,18 @@ export const projectStatusWorkflow = [
 ] as const;
 
 export type ProjectStatus = (typeof projectStatusWorkflow)[number];
+
+export type ClockEventType = "clock_in" | "clock_out" | "break_start" | "break_end";
+
+export type LocationPoint = {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+};
+
+export type TimeEntryPayload = {
+  project_id: string;
+  type: ClockEventType;
+  location: LocationPoint;
+  timestamp: string;
+};
