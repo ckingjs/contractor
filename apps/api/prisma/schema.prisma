@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  manager
+  worker
+  client
+}
+
+enum TimeEntryType {
+  clock_in
+  clock_out
+  break_start
+  break_end
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  name         String
+  role         UserRole
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  timeEntries  TimeEntry[]
+  auditLogs    AuditLog[]
+}
+
+model Project {
+  id              String      @id @default(uuid())
+  name            String
+  geofenceEnabled Boolean     @default(false)
+  geofenceLat     Float?
+  geofenceLng     Float?
+  geofenceRadius  Int?
+  geofenceAddress String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  timeEntries     TimeEntry[]
+}
+
+model TimeEntry {
+  id               String        @id @default(uuid())
+  userId           String
+  projectId        String
+  type             TimeEntryType
+  timestamp        DateTime
+  locationLat      Float
+  locationLng      Float
+  locationAccuracy Float
+  isWithinGeofence Boolean
+  distanceFromSite Float
+  syncedAt         DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  user             User          @relation(fields: [userId], references: [id])
+  project          Project       @relation(fields: [projectId], references: [id])
+
+  @@index([userId, projectId, timestamp])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  actorUser   User     @relation(fields: [actorUserId], references: [id])
+
+  @@index([entityType, entityId])
+}
